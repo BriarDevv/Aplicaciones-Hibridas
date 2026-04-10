@@ -1,10 +1,22 @@
 import express from 'express';
 import User from './models/User.js';
+import dotenv from 'dotenv';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+
+dotenv.config();
 
 const userModel = new User();
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const SECRET_KEY = process.env.SECRET_KEY;
+
 const app = express();
+
+app.use(express.json());
+
+app.use(express.static('public'));
+
 
 app.get('/', (req, res) => {
     res.send('<h1>Hello World!</h1>');
@@ -24,12 +36,22 @@ app.get('/api/users/:id', async (req, res) => {
 });
 
 app.post('/api/users', async (req, res) => {
-    const newUser = {
-        name: 'Jane Doe',
-        email: 'janeDoe@gmail.com'
-    };
+    const { name, email, password } = req.body;
+    if(!name || !email || !password) return res.status(400).json({ message: 'Name, email, and password are required' });
+    const newUser = { name, email, password };
     await userModel.save(newUser);
     res.status(201).json(newUser);
+});
+
+app.post('/api/users/login', async (req, res) => {
+    const { email, password } = req.body;
+    if(!email || !password) return res.status(400).json({ message: 'Email and password are required' });
+    const user = await userModel.findByEmail(email);
+    if(!user) return res.status(404).json({ message: 'User not found' });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if(!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+    const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: '1h' });
+    res.json({ message: 'Login successful', token });
 });
 
 app.delete('/api/users/:id', async (req, res) => {

@@ -1,7 +1,8 @@
 import fs from 'fs/promises';
+import bcrypt from 'bcrypt';
 
 class User {
-    path = './Semana-03/data/users.json';
+    path = './Semana-04/data/users.json';
     list = [];
     constructor() {
     }
@@ -9,6 +10,7 @@ class User {
     async save(user){
         const id = crypto.randomUUID();
         user.id = id;
+        user.password = await bcrypt.hash(user.password, 10);
         const fileData = await fs.readFile(this.path, 'utf-8');
         const existing = JSON.parse(fileData);
         existing.push(user);
@@ -26,6 +28,12 @@ class User {
         const data = await fs.readFile(this.path, 'utf-8');
         const json = JSON.parse(data);
         return json.find(user => user.id === id);
+    }
+
+    async findByEmail(email){
+        const data = await fs.readFile(this.path, 'utf-8');
+        const json = JSON.parse(data);
+        return json.find(user => user.email === email);
     }
 
     async deleteById(id){
