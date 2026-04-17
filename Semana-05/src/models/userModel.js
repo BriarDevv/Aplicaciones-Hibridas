@@ -1,6 +1,6 @@
-import mongoose, { Collection } from "mongoose";
+import mongoose from 'mongoose';
 
-const Collection = "users";
+const collectionName = 'users';
 
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -8,4 +8,4 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
 });
 
-export const userModel = mongoose.model(Collection, userSchema);
+export const userModel = mongoose.model(collectionName, userSchema);
